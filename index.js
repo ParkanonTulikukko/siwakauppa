@@ -4,9 +4,12 @@ const bodyParser = require('body-parser');
 const nodemailer = require('nodemailer');
 const cors = require('cors');
 const path = require('path');
+const generateOrderDocument = require('./generatePages'); // Import the new module
 
 const app = express();
 const port = process.env.PORT || 3000;
+
+let orders = []; // Store orders
 
 // Middleware to parse form data
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -20,9 +23,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Configure Nodemailer with custom SMTP settings
 const transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST, // e.g., 'smtp.your-email-provider.com'
-    port: process.env.EMAIL_PORT, // e.g., 587 or 465
-    secure: process.env.EMAIL_SECURE === 'true', // true for 465, false for other ports
+    host: process.env.EMAIL_HOST,
+    port: process.env.EMAIL_PORT,
+    secure: process.env.EMAIL_SECURE === 'true',
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
@@ -35,20 +38,25 @@ app.get('/test', (req, res) => {
 });
 
 // Handle form submission
-app.post('/submit-order', (req, res) => {
-
-    console.log("email: " + process.env.EMAIL_USER);
+app.post('/submit-order', async (req, res) => {
     const orderData = req.body;
+    orders.push(orderData); // Add order to the list
+
+    // Generate the order document
+    await generateOrderDocument(orders);
 
     // Email content
     const mailOptions = {
         from: process.env.EMAIL_USER,
-        to: process.env.EMAIL_USER, // Your email or any email you want to receive orders at
+        to: process.env.EMAIL_USER,
         subject: 'New T-Shirt Order',
         text: `
             You have a new T-Shirt order:
             
             Full Name: ${orderData.fullname}
+            Street Address: ${orderData.streetAddress}
+            City: ${orderData.city}
+            Postal Code: ${orderData.postalCode}
             Email: ${orderData.email}
             Phone: ${orderData.phone}
             T-Shirt Size: ${orderData.tshirtsize}
