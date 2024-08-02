@@ -4,6 +4,10 @@
 # Environment variables
 .env
 
+# T-shirt order files
+Orders.docx
+Orders.txt
+
 # Logs
 logs
 *.log
