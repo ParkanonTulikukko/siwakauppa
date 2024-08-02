@@ -5,6 +5,7 @@ const nodemailer = require('nodemailer');
 const cors = require('cors');
 const path = require('path');
 const generateOrderDocument = require('./generatePages');
+const generateOrderTextFile = require('./generateTextFile');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -43,7 +44,8 @@ app.post('/submit-order', async (req, res) => {
     orders.push(orderData); // Add order to the list
 
     // Generate the order document
-    await generateOrderDocument(orders);
+    //await generateOrderDocument(orders);
+    generateOrderTextFile(orders);
 
     // Email content
     const mailOptions = {
@@ -66,6 +68,7 @@ app.post('/submit-order', async (req, res) => {
     };
 
     // Send email
+    /*
     transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
             console.error('Error sending email:', error);
@@ -74,7 +77,7 @@ app.post('/submit-order', async (req, res) => {
             console.log('Email sent:', info.response);
             res.send('Order received. Thank you!');
         }
-    });
+    });*/
 });
 
 app.listen(port, () => {

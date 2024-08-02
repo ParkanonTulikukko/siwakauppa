@@ -1,51 +1,87 @@
-const { Document, Packer, Paragraph, TextRun, PageBreak } = require("docx");
+const { Document, Packer, Paragraph, TextRun, PageBreak, HeadingLevel, Alignment } = require("docx");
 const fs = require("fs");
 
 const generateOrderDocument = async (orders) => {
     const doc = new Document({
-        sections: [],
+        sections: [
+            {
+                properties: {},
+                children: []
+            }
+        ]
     });
 
-    orders.forEach((order, index) => {
+    const FONT_SIZE = 12;
+
+    const addOrderToDocument = (order, isNewPage = false) => {
         const orderParagraphs = [
             new Paragraph({
                 children: [
                     new TextRun({
-                        text: `${order.fullname}`,
-                        bold: true,
+                        text: order.fullname,
+                        size: FONT_SIZE * 2,  // 12 pt font size
                     }),
                 ],
+                spacing: { after: 200 },
             }),
             new Paragraph({
                 children: [
                     new TextRun({
-                        text: `${order.streetAddress}`,
+                        text: order.streetAddress,
+                        size: FONT_SIZE * 2,
                     }),
                 ],
+                spacing: { after: 200 },
             }),
             new Paragraph({
                 children: [
                     new TextRun({
                         text: `${order.city} ${order.postalCode}`,
+                        size: FONT_SIZE * 2,
                     }),
                 ],
+                spacing: { after: 200 },
             }),
             new Paragraph({
-                children: [
+                children: order.sizes.map(size => 
                     new TextRun({
-                        text: `${order.tshirtSize} ${order.quantity}`,
-                    }),
-                ],
-            }),
+                        text: `${size.size} ${size.quantity}`,
+                        size: FONT_SIZE * 2,
+                        italics: true,
+                    })
+                ),
+                spacing: { after: 200 },
+            })
         ];
 
-        if (index > 0) {
-            orderParagraphs.unshift(new Paragraph(new PageBreak()));
+        if (isNewPage) {
+            doc.addSection({
+                properties: {},
+                children: [new Paragraph({ children: [new PageBreak()] })]
+            });
         }
 
         doc.addSection({
-            children: orderParagraphs,
+            properties: {},
+            children: orderParagraphs
         });
+    };
+
+    let currentPageContentHeight = 0;
+    const PAGE_HEIGHT_LIMIT = 1000;  // Arbitrary page height limit; adjust as needed
+
+    orders.forEach((order, index) => {
+        // Calculate content height for the current order
+        const estimatedOrderHeight = 400;  // Rough estimate of the height of one order
+        
+        if (currentPageContentHeight + estimatedOrderHeight > PAGE_HEIGHT_LIMIT) {
+            // Add a new page if needed
+            addOrderToDocument(order, true);
+            currentPageContentHeight = estimatedOrderHeight;  // Reset content height
+        } else {
+            addOrderToDocument(order);
+            currentPageContentHeight += estimatedOrderHeight;  // Increment content height
+        }
     });
 
     const buffer = await Packer.toBuffer(doc);
