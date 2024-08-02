@@ -25,28 +25,42 @@
             margin-top: 20px;
             padding: 10px 20px;
         }
+        .basket-items {
+            margin-top: 20px;
+        }
+        .basket-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .basket-item button {
+            margin-left: 10px;
+        }
     </style>
 </head>
 <body>
     <h1>Order T-Shirts</h1>
     <form id="orderForm">
         <label for="fullname">Full Name</label>
-        <input type="text" id="fullname" name="fullname" required>
-
+        <input type="text" id="fullname" name="fullname" value="John Doe" required>
+        
         <label for="streetAddress">Street Address</label>
-        <input type="text" id="streetAddress" name="streetAddress" required>
-
+        <input type="text" id="streetAddress" name="streetAddress" value="123 Main St" required>
+        
         <label for="city">City</label>
-        <input type="text" id="city" name="city" required>
-
+        <input type="text" id="city" name="city" value="Anytown" required>
+        
         <label for="postalCode">Postal Code</label>
-        <input type="text" id="postalCode" name="postalCode" required>
-
+        <input type="text" id="postalCode" name="postalCode" value="12345" required>
+        
         <label for="email">Email</label>
-        <input type="email" id="email" name="email" required>
-
+        <input type="email" id="email" name="email" value="john.doe@example.com" required>
+        
         <label for="phoneNumber">Phone Number</label>
-        <input type="text" id="phoneNumber" name="phoneNumber" required>
+        <input type="text" id="phoneNumber" name="phoneNumber" value="123-456-7890" required>
+        
 
         <label for="tshirtSize">T-Shirt Size</label>
         <select id="tshirtSize" name="tshirtSize" required>
@@ -57,23 +71,54 @@
         </select>
 
         <label for="quantity">Quantity</label>
-        <input type="number" id="quantity" name="quantity" min="1" required>
+        <input type="number" id="quantity" name="quantity" min="1" value="1" required>
+        
+        <button type="button" id="addToBasket">Lisää ostoskoriin</button>
+
+        <div class="basket-items" id="basketItems"></div>
+
+        <label for="additionalInfo">Additional Information</label>
+        <textarea id="additionalInfo" name="additionalInfo" rows="4"></textarea>
 
         <button type="submit">Submit Order</button>
     </form>
 
     <script>
+        document.getElementById('addToBasket').addEventListener('click', function() {
+            const size = document.getElementById('tshirtSize').value;
+            const quantity = document.getElementById('quantity').value;
+
+            if (quantity > 0) {
+                const basketItems = document.getElementById('basketItems');
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'basket-item';
+                itemDiv.textContent = `${size} - ${quantity} pcs`;
+
+                const removeButton = document.createElement('button');
+                removeButton.textContent = 'Poista';
+                removeButton.addEventListener('click', function() {
+                    basketItems.removeChild(itemDiv);
+                });
+
+                itemDiv.appendChild(removeButton);
+                basketItems.appendChild(itemDiv);
+            }
+        });
+
         document.getElementById('orderForm').addEventListener('submit', async function(event) {
             event.preventDefault();
 
             const formData = new FormData(this);
+            const basketItems = Array.from(document.getElementById('basketItems').children).map(item => item.textContent.replace('Poista', ''));
             const data = {
                 fullname: formData.get('fullname'),
                 streetAddress: formData.get('streetAddress'),
                 city: formData.get('city'),
                 postalCode: formData.get('postalCode'),
-                tshirtSize: formData.get('tshirtSize'),
-                quantity: formData.get('quantity')
+                email: formData.get('email'),
+                phoneNumber: formData.get('phoneNumber'),
+                additionalInfo: formData.get('additionalInfo'),
+                basketItems: basketItems
             };
 
             try {
@@ -86,8 +131,10 @@
                 });
 
                 if (response.ok) {
+                    console.log(data)
                     alert('Order received. Thank you!');
                     this.reset();
+                    document.getElementById('basketItems').innerHTML = '';
                 } else {
                     alert('There was an error submitting your order. Please try again.');
                 }

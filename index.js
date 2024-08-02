@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const nodemailer = require('nodemailer');
 const cors = require('cors');
 const path = require('path');
-const generateOrderDocument = require('./generatePages'); // Import the new module
+const generateOrderDocument = require('./generatePages');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -50,19 +50,19 @@ app.post('/submit-order', async (req, res) => {
         from: process.env.EMAIL_USER,
         to: process.env.EMAIL_USER,
         subject: 'New T-Shirt Order',
-        text: `
-            You have a new T-Shirt order:
-            
-            Full Name: ${orderData.fullname}
-            Street Address: ${orderData.streetAddress}
-            City: ${orderData.city}
-            Postal Code: ${orderData.postalCode}
-            Email: ${orderData.email}
-            Phone: ${orderData.phone}
-            T-Shirt Size: ${orderData.tshirtsize}
-            Quantity: ${orderData.quantity}
-            Additional Information: ${orderData.additional_info}
-        `
+        html: `
+        <p>You have a new T-Shirt order:</p><br/>
+        <strong>Full Name:</strong> ${orderData.fullname} <br/>  
+        <strong>Street Address:</strong> ${orderData.streetAddress} <br/>
+        <strong>City & Postal Code:</strong> ${orderData.city}, ${orderData.postalCode} <br/>
+        <strong>Email:</strong> ${orderData.email} <br/>     
+        <strong>Phone Number:</strong> ${orderData.phoneNumber} <br/> 
+        <strong>Basket Items:</strong>  
+        <ul>
+            ${orderData.basketItems.map(item => `<li><strong>${item}</strong></li>`).join('')}
+        </ul>
+        <p><strong>Additional Information:</strong> ${orderData.additionalInfo}</p>
+    `
     };
 
     // Send email
