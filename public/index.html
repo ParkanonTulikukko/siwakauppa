@@ -26,17 +26,22 @@
             padding: 10px 20px;
         }
         .basket-items {
-            margin-top: 20px;
+            margin-top: 0px;
+            background-color: green;
         }
         .basket-item {
             display: flex;
             align-items: center;
             justify-content: space-between;
             font-weight: bold;
-            margin-bottom: 10px;
+            margin-bottom: 0px;
         }
         .basket-item button {
-            margin-left: 10px;
+            margin-left: 0px;
+        }
+        .total-price, .order-summary {
+            font-weight: bold;
+            margin-top: 20px;
         }
     </style>
 </head>
@@ -61,7 +66,6 @@
         <label for="phoneNumber">Phone Number</label>
         <input type="text" id="phoneNumber" name="phoneNumber" value="123-456-7890" required>
         
-
         <label for="tshirtSize">T-Shirt Size</label>
         <select id="tshirtSize" name="tshirtSize" required>
             <option value="Small">Small</option>
@@ -73,20 +77,106 @@
         <label for="quantity">Quantity</label>
         <input type="number" id="quantity" name="quantity" min="1" value="1" required>
         
-        <button type="button" id="addToBasket">Lisää ostoskoriin</button>
+        <button type="button" id="addToBasket">Add to Basket</button>
 
         <div class="basket-items" id="basketItems"></div>
 
         <label for="additionalInfo">Additional Information</label>
         <textarea id="additionalInfo" name="additionalInfo" rows="4"></textarea>
 
+        <div class="order-summary" id="orderSummary"></div>
+
         <button type="submit">Submit Order</button>
     </form>
 
     <script>
+        const tshirtPrice = 35;
+        const postageCosts = [
+            { maxQuantity: 1, cost: 5.90 },
+            { maxQuantity: 2, cost: 6.90 },
+            { maxQuantity: 5, cost: 8.90 }
+        ];
+        const additionalPostagePerShirt = 2;
+        //let totalQuantity = 0
+        //let totalTshirtPrice = 0
+        //let totalPrice = 0
+        //let totalPostage = totalTshirtPrice + totalPrice;
+        const order = 
+                {'Small': 0,
+                'Medium': 0,
+                'Large': 0,
+                'X-Large': 0};
+
+        console.log(order);
+
+        function calculatePostage(quantity) {
+            console.log("funkkarissa: " +quantity);
+            if (quantity == 0) {
+                return 0;
+                }
+            for (const cost of postageCosts) {
+                if (quantity <= cost.maxQuantity) {
+                    postage = cost.cost;
+                    break;
+                }
+            }
+            if (quantity > 5) {
+                postage = postageCosts[2].cost + (quantity - 5) * additionalPostagePerShirt;
+            }
+            console.log("funkkarissa: " +postage);
+            return postage;
+        }
+
+        function updateOrderSummary() {
+            let orderDetails = '';
+            let totalQuantity = 0;
+            let totalTshirtPrice = 0;
+            let totalPostage = 0;
+            let totalPrice = 0;
+
+            // Iterate over each size in the order object
+            for (const size in order) { 
+                totalQuantity += order[size];
+                console.log(size);
+                console.log(order[size]);
+                // Check if the quantity for the current size is greater than 0
+                if (order[size] > 0) {
+                    // Append the size and its quantity to the orderDetails string
+                    orderDetails += `${size}: ${order[size]} pcs<br/>`;
+                }
+            }
+
+
+            totalTshirtPrice = totalQuantity * tshirtPrice;
+            totalPostage = calculatePostage(totalQuantity);
+            totalPrice = totalTshirtPrice + totalPostage;
+
+            // Construct the summary string
+            const summary = `
+                Order Summary: <br/>
+                ${orderDetails ? 'T-Shirt Sizes:<br/>' + orderDetails : 'No T-Shirts Ordered<br/>'}
+                T-Shirts Price: ${totalTshirtPrice.toFixed(2)} euros <br/>
+                Postage: ${totalPostage.toFixed(2)} euros <br/>
+                Total Price: ${totalPrice.toFixed(2)} euros <br/>
+            `;
+
+            // Update the innerHTML of the element with the id 'orderSummary'
+            document.getElementById('orderSummary').innerHTML = summary;
+            console.log(summary);          
+        }
+
+
         document.getElementById('addToBasket').addEventListener('click', function() {
-            const size = document.getElementById('tshirtSize').value;
             const quantity = document.getElementById('quantity').value;
+            console.log(quantity);
+            const size = document.getElementById('tshirtSize').value;
+            console.log(size);
+            order[size] = order[size] + parseInt(quantity);
+            //tää lasketaan myöhemmin:
+            //totalQuantity = totalQuantity + quantity;
+            //calculateTotalPrice();
+            console.log(order);
+
 
             if (quantity > 0) {
                 const basketItems = document.getElementById('basketItems');
@@ -95,13 +185,21 @@
                 itemDiv.textContent = `${size} - ${quantity} pcs`;
 
                 const removeButton = document.createElement('button');
-                removeButton.textContent = 'Poista';
+                removeButton.textContent = 'Remove';
+                removeButton.size = size;
+                removeButton.quantity = quantity;
                 removeButton.addEventListener('click', function() {
                     basketItems.removeChild(itemDiv);
+                    //TÄHÄN TARVII PAITOJEN MÄÄRÄLLÄ VÄHENTÄÄ!
+                    order[this.size] = order[this.size] - this.quantity;
+                    updateOrderSummary();
+                    console.log(order);
                 });
 
                 itemDiv.appendChild(removeButton);
                 basketItems.appendChild(itemDiv);
+
+                updateOrderSummary();
             }
         });
 
@@ -109,7 +207,7 @@
             event.preventDefault();
 
             const formData = new FormData(this);
-            const basketItems = Array.from(document.getElementById('basketItems').children).map(item => item.textContent.replace('Poista', ''));
+            const basketItems = Array.from(document.getElementById('basketItems').children).map(item => item.textContent.replace('Remove', '').trim());
             const data = {
                 fullname: formData.get('fullname'),
                 streetAddress: formData.get('streetAddress'),
@@ -118,7 +216,9 @@
                 email: formData.get('email'),
                 phoneNumber: formData.get('phoneNumber'),
                 additionalInfo: formData.get('additionalInfo'),
-                basketItems: basketItems
+                basketItems: basketItems,
+                totalPrice: document.getElementById('totalPrice').textContent,
+                orderSummary: document.getElementById('orderSummary').textContent
             };
 
             try {
@@ -131,10 +231,10 @@
                 });
 
                 if (response.ok) {
-                    console.log(data)
                     alert('Order received. Thank you!');
                     this.reset();
                     document.getElementById('basketItems').innerHTML = '';
+                    updateOrderSummary();
                 } else {
                     alert('There was an error submitting your order. Please try again.');
                 }
