@@ -46,7 +46,23 @@
     </style>
 </head>
 <body>
-    <h1>Order T-Shirts</h1>
+    <h1>SIWAKAUPPA ON AUKI!</h1>
+    <img src="t-paita-templatessa.jpg" alt="T-paita malli" style="align-self: center; width: 100%;">
+    <p>
+        Siwa-paitojen ennakkomyynti on alkanut! 
+
+        Kauppa auki XXXX asti, tai niin kauan kunnes tilaus on täynnä. Paita on Cottoverin Reilun Kaupan / Fair Trade -mallia.
+        
+        Postikulut:
+        1 kpl - 5.90 e,
+        2 kpl - 6.90 e,
+        3-5 kpl - 8.90 ja
+        yli viiden kappaleen jälkeen jokainen lisäpaita + kaksi (2) euroa. 
+        
+        Paidat postitetaan viikolla XX.
+        
+        Ongelmia?: heikki.kuivala@parkanontulikukko.fi Paidat myy Tmi Maisteri Kuivala y-tunnus: 3405845-4   
+    </p>
     <form id="orderForm">
         <label for="fullname">Full Name</label>
         <input type="text" id="fullname" name="fullname" value="John Doe" required>
@@ -72,6 +88,7 @@
             <option value="Medium">Medium</option>
             <option value="Large">Large</option>
             <option value="X-Large">X-Large</option>
+            <option value="XX-Large">XX-Large</option>
         </select>
 
         <label for="quantity">Quantity</label>
@@ -99,13 +116,14 @@
         const additionalPostagePerShirt = 2;
         //let totalQuantity = 0
         //let totalTshirtPrice = 0
-        //let totalPrice = 0
+        let totalPrice = 0
         //let totalPostage = totalTshirtPrice + totalPrice;
         const order = 
                 {'Small': 0,
                 'Medium': 0,
                 'Large': 0,
-                'X-Large': 0};
+                'X-Large': 0,
+                'XX-Large': 0};
 
         console.log(order);
 
@@ -132,7 +150,7 @@
             let totalQuantity = 0;
             let totalTshirtPrice = 0;
             let totalPostage = 0;
-            let totalPrice = 0;
+            totalPrice = 0;
 
             // Iterate over each size in the order object
             for (const size in order) { 
@@ -145,7 +163,6 @@
                     orderDetails += `${size}: ${order[size]} pcs<br/>`;
                 }
             }
-
 
             totalTshirtPrice = totalQuantity * tshirtPrice;
             totalPostage = calculatePostage(totalQuantity);
@@ -207,7 +224,7 @@
             event.preventDefault();
 
             const formData = new FormData(this);
-            const basketItems = Array.from(document.getElementById('basketItems').children).map(item => item.textContent.replace('Remove', '').trim());
+            //const basketItems = Array.from(document.getElementById('basketItems').children).map(item => item.textContent.replace('Remove', '').trim());
             const data = {
                 fullname: formData.get('fullname'),
                 streetAddress: formData.get('streetAddress'),
@@ -216,11 +233,12 @@
                 email: formData.get('email'),
                 phoneNumber: formData.get('phoneNumber'),
                 additionalInfo: formData.get('additionalInfo'),
-                basketItems: basketItems,
-                totalPrice: document.getElementById('totalPrice').textContent,
-                orderSummary: document.getElementById('orderSummary').textContent
+                orderItems: order,
+                orderSummary: document.getElementById('orderSummary').textContent,
+                totalPrice: totalPrice
             };
 
+            console.log(data);
             try {
                 const response = await fetch('/submit-order', {
                     method: 'POST',
@@ -231,10 +249,11 @@
                 });
 
                 if (response.ok) {
-                    alert('Order received. Thank you!');
                     this.reset();
                     document.getElementById('basketItems').innerHTML = '';
+                    document.getElementById('orderSummary').innerHTML = '';
                     updateOrderSummary();
+                    window.location.href = "/thank-you";
                 } else {
                     alert('There was an error submitting your order. Please try again.');
                 }

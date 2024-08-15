@@ -6,6 +6,7 @@ const cors = require('cors');
 const path = require('path');
 const generateOrderDocument = require('./generatePages');
 const generateOrderTextFile = require('./generateTextFile');
+const res = require('express/lib/response');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -18,6 +19,60 @@ app.use(bodyParser.json()); // To handle JSON requests
 
 // Enable CORS
 app.use(cors());
+
+// Määrittele päivämäärät ja ajat
+const startDate = new Date('2024-09-17T10:00:00');
+const endDate = new Date('2024-09-20T18:00:00');
+
+// Määritellään päivämäärän ja ajan näyttö suomalaisessa muodossa
+const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+const formattedStartDate = new Intl.DateTimeFormat('fi-FI', options).format(startDate);
+
+// Middleware tarkistaa päivämäärän ja ajan ja vastaa oikealla sivulla
+app.use((req, res, next) => {
+    const currentDate = new Date();
+
+    if (currentDate < startDate) {
+        // HTML-vastaus ennen ennakkomyyntikautta
+        return res.send(`
+            <!DOCTYPE html>
+            <html lang="fi">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Ennakkomyynti alkamassa</title>
+            </head>
+            <body>
+                <h1>"Tekis mieli ryöstää Siwa" -t-paitojen ennakkomyynti alkaa pian!</h1>
+                <p>Ennakkomyynti alkaa ${formattedStartDate}. Pysy kuulolla!</p>
+            </body>
+            </html>
+        `);
+    } else if (currentDate >= startDate && currentDate <= endDate) {
+        // Palvelin tarjoaa index-sivun ennakkomyyntikauden aikana
+        return res.sendFile(__dirname + '/public/index.html');
+    } else if (currentDate > endDate) {
+        // HTML-vastaus ennakkomyyntikauden jälkeen
+        return res.send(`
+            <!DOCTYPE html>
+            <html lang="fi">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Ennakkomyynti päättynyt</title>
+            </head>
+            <body>
+                <h1>Ennakkomyynti päättynyt</h1>
+                <p>"Tekis mieli ryöstää Siwa" -t-paitojen ennakkomyynti on päättynyt. Kiitos tuestasi!</p>
+            </body>
+            </html>
+        `);
+    }
+
+    // Jatka seuraavaan middlewareen tai reititykseen
+    next();
+});
+
 
 // Serve static files (e.g., the HTML form)
 app.use(express.static(path.join(__dirname, 'public')));
@@ -38,14 +93,49 @@ app.get('/test', (req, res) => {
     res.send('The server is up and running!');
 });
 
+app.get('/thank-you', (req, res) => {
+    res.send(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Thank You</title>
+            <style>
+                body {
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    height: 100vh;
+                    margin: 0;
+                    font-family: Arial, sans-serif;
+                    background-color: #f4f4f4;
+                }
+                .thank-you-message {
+                    text-align: center;
+                    background: white;
+                    padding: 20px;
+                    border-radius: 10px;
+                    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+                }
+            </style>
+        </head>
+        <body>
+            <div class="thank-you-message">
+                <h1>Kiitos tilauksestasi!</h1>
+                <p>Saat maksuohjeet sähköpostitse.</p>
+            </div>
+        </body>
+        </html>
+    `);
+});
+
+
 // Handle form submission
 app.post('/submit-order', async (req, res) => {
     const orderData = req.body;
-    orders.push(orderData); // Add order to the list
 
-    // Generate the order document
-    //await generateOrderDocument(orders);
-    generateOrderTextFile(orders);
+    generateOrderTextFile(orderData);
 
     // Email content
     const mailOptions = {
@@ -61,14 +151,17 @@ app.post('/submit-order', async (req, res) => {
         <strong>Phone Number:</strong> ${orderData.phoneNumber} <br/> 
         <strong>Basket Items:</strong>  
         <ul>
-            ${orderData.basketItems.map(item => `<li><strong>${item}</strong></li>`).join('')}
+            ${Object.entries(orderData.orderItems).map(([size, quantity]) => 
+                quantity > 0 ? `<li>${size}: ${quantity}</li>` : ''
+            ).join('')}
         </ul>
+        <strong>Total Price:</strong> ${orderData.totalPrice} EUR <br/>
         <p><strong>Additional Information:</strong> ${orderData.additionalInfo}</p>
     `
     };
 
     // Send email
-    /*
+    
     transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
             console.error('Error sending email:', error);
@@ -77,7 +170,7 @@ app.post('/submit-order', async (req, res) => {
             console.log('Email sent:', info.response);
             res.send('Order received. Thank you!');
         }
-    });*/
+    });
 });
 
 app.listen(port, () => {
