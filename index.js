@@ -4,7 +4,6 @@ const bodyParser = require('body-parser');
 const nodemailer = require('nodemailer');
 const cors = require('cors');
 const path = require('path');
-const generateOrderDocument = require('./generatePages');
 const generateOrderTextFile = require('./generateTextFile');
 const res = require('express/lib/response');
 
@@ -16,22 +15,90 @@ let orders = []; // Store orders
 // Middleware to parse form data
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json()); // To handle JSON requests
+// Serve static files from the 'public' directory
+//
 
 // Enable CORS
 app.use(cors());
 
+const kuukausi = '08';
+
+//console.log(path.resolve('public'));
+
 // Määrittele päivämäärät ja ajat
-const startDate = new Date('2024-09-17T10:00:00');
-const endDate = new Date('2024-09-20T18:00:00');
+const startDate = new Date('2024-' + kuukausi + '-10T10:00:00');
+const endDate = new Date('2024-' + kuukausi + '-20T18:00:00');
 
 // Määritellään päivämäärän ja ajan näyttö suomalaisessa muodossa
 const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
 const formattedStartDate = new Intl.DateTimeFormat('fi-FI', options).format(startDate);
 
 // Middleware tarkistaa päivämäärän ja ajan ja vastaa oikealla sivulla
-app.use((req, res, next) => {
+// Middleware to handle requests
+// Middleware to handle both "/" and "/siwakauppa" requests
+app.get(['/', '/siwakauppa'], (req, res) => {
     const currentDate = new Date();
 
+    // Date checks
+    if (currentDate < startDate) {
+        return res.send(`
+            <!DOCTYPE html>
+            <html lang="fi">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Ennakkomyynti alkamassa</title>
+            </head>
+            <body>
+                <h1>"Tekis mieli ryöstää Siwa" -t-paitojen ennakkomyynti alkaa pian!</h1>
+                <p>Ennakkomyynti alkaa ${formattedStartDate}. Pysy kuulolla!</p>
+            </body>
+            </html>
+        `);
+    }
+
+    if (currentDate > endDate) {
+        return res.send(`
+            <!DOCTYPE html>
+            <html lang="fi">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Ennakkomyynti päättynyt</title>
+            </head>
+            <body>
+                <h1>Ennakkomyynti päättynyt</h1>
+                <p>"Tekis mieli ryöstää Siwa" -t-paitojen ennakkotilaus on täynnä tai päättynyt. </p>
+            </body>
+            </html>
+        `);
+    }
+
+    // If the date is within the start and end date, serve the main content
+    return res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.use(express.static(path.join(__dirname, 'public')));
+
+/*
+app.get('/', (req, res) => {
+    console.log("index");
+    res.redirect('/siwakauppa');
+});
+*/
+
+// Serve static files (e.g., the HTML form)
+//app.use(express.static(path.join(__dirname, 'public')));
+//app.use(express.static(path.resolve('public')));
+//app.use(express.static(path.join(process.cwd(), 'public')));
+/*
+app.get('/siwakauppa', (req, res) => {
+    const currentDate = new Date();
+    console.log("currentDate");
+    console.log(currentDate);
+    console.log("startDate");
+    console.log(startDate);
+    console.log(currentDate < startDate);
     if (currentDate < startDate) {
         // HTML-vastaus ennen ennakkomyyntikautta
         return res.send(`
@@ -48,10 +115,8 @@ app.use((req, res, next) => {
             </body>
             </html>
         `);
-    } else if (currentDate >= startDate && currentDate <= endDate) {
-        // Palvelin tarjoaa index-sivun ennakkomyyntikauden aikana
-        return res.sendFile(__dirname + '/public/index.html');
-    } else if (currentDate > endDate) {
+    } 
+    else if (currentDate > endDate) {
         // HTML-vastaus ennakkomyyntikauden jälkeen
         return res.send(`
             <!DOCTYPE html>
@@ -63,19 +128,16 @@ app.use((req, res, next) => {
             </head>
             <body>
                 <h1>Ennakkomyynti päättynyt</h1>
-                <p>"Tekis mieli ryöstää Siwa" -t-paitojen ennakkomyynti on päättynyt. Kiitos tuestasi!</p>
+                <p>"Tekis mieli ryöstää Siwa" -t-paitojen ennakkotilaus on täynnä tai päättynyt. </p>
             </body>
             </html>
         `);
-    }
-
-    // Jatka seuraavaan middlewareen tai reititykseen
-    next();
-});
-
-
-// Serve static files (e.g., the HTML form)
-app.use(express.static(path.join(__dirname, 'public')));
+    } 
+    else if (currentDate > startDate && currentDate < endDate) {
+        res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    }   
+})
+    */
 
 // Configure Nodemailer with custom SMTP settings
 const transporter = nodemailer.createTransport({

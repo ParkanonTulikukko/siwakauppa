@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order T-Shirts</title>
+    <title>Siwakauppa auki!</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -27,7 +27,7 @@
         }
         .basket-items {
             margin-top: 0px;
-            background-color: green;
+            background-color: rgb(111, 179, 111);
         }
         .basket-item {
             display: flex;
@@ -51,59 +51,60 @@
     <p>
         Siwa-paitojen ennakkomyynti on alkanut! 
 
-        Kauppa auki XXXX asti, tai niin kauan kunnes tilaus on täynnä. Paita on Cottoverin Reilun Kaupan / Fair Trade -mallia.
+        Kauppa auki 22.8.2024 klo 10.00 asti, tai niin kauan kunnes tilaus (50 kpl) on täynnä. Paita on Cottoverin Reilun Kaupan / Fair Trade -mallia. 
         
         Postikulut:
         1 kpl - 5.90 e,
         2 kpl - 6.90 e,
         3-5 kpl - 8.90 ja
-        yli viiden kappaleen jälkeen jokainen lisäpaita + kaksi (2) euroa. 
+        yli viiden kappaleen jälkeen jokainen lisäpaita + kaksi (2) euroa postikuluja. 
         
-        Paidat postitetaan viikolla XX.
+        Paidat postitetaan 20.9.2024.
         
         Ongelmia?: heikki.kuivala@parkanontulikukko.fi Paidat myy Tmi Maisteri Kuivala y-tunnus: 3405845-4   
     </p>
     <form id="orderForm">
-        <label for="fullname">Full Name</label>
+        <label for="fullname">Koko nimi</label>
         <input type="text" id="fullname" name="fullname" value="John Doe" required>
         
-        <label for="streetAddress">Street Address</label>
+        <label for="streetAddress">Katuosoite</label>
         <input type="text" id="streetAddress" name="streetAddress" value="123 Main St" required>
         
-        <label for="city">City</label>
+        <label for="city">Kaupunki</label>
         <input type="text" id="city" name="city" value="Anytown" required>
         
-        <label for="postalCode">Postal Code</label>
+        <label for="postalCode">Postinumero</label>
         <input type="text" id="postalCode" name="postalCode" value="12345" required>
         
-        <label for="email">Email</label>
+        <label for="email">Sähköposti</label>
         <input type="email" id="email" name="email" value="john.doe@example.com" required>
         
-        <label for="phoneNumber">Phone Number</label>
+        <label for="phoneNumber">Puhelinnumero</label>
         <input type="text" id="phoneNumber" name="phoneNumber" value="123-456-7890" required>
         
-        <label for="tshirtSize">T-Shirt Size</label>
+        <label for="tshirtSize">T-paidan koko</label>
         <select id="tshirtSize" name="tshirtSize" required>
             <option value="Small">Small</option>
             <option value="Medium">Medium</option>
             <option value="Large">Large</option>
             <option value="X-Large">X-Large</option>
             <option value="XX-Large">XX-Large</option>
+            <option value="XXX-Large">XXX-Large</option>
         </select>
-
-        <label for="quantity">Quantity</label>
+    
+        <label for="quantity">Määrä</label>
         <input type="number" id="quantity" name="quantity" min="1" value="1" required>
         
-        <button type="button" id="addToBasket">Add to Basket</button>
-
+        <button type="button" id="addToBasket">Lisää koriin</button>
+    
         <div class="basket-items" id="basketItems"></div>
-
-        <label for="additionalInfo">Additional Information</label>
+    
+        <label for="additionalInfo">Lisätiedot</label>
         <textarea id="additionalInfo" name="additionalInfo" rows="4"></textarea>
-
+    
         <div class="order-summary" id="orderSummary"></div>
-
-        <button type="submit">Submit Order</button>
+    
+        <button type="submit">Lähetä tilaus</button>
     </form>
 
     <script>
@@ -123,12 +124,13 @@
                 'Medium': 0,
                 'Large': 0,
                 'X-Large': 0,
-                'XX-Large': 0};
+                'XX-Large': 0,
+                'XXX-Large': 0};
 
-        console.log(order);
+        //console.log(order);
 
         function calculatePostage(quantity) {
-            console.log("funkkarissa: " +quantity);
+            //console.log("funkkarissa: " +quantity);
             if (quantity == 0) {
                 return 0;
                 }
@@ -141,7 +143,7 @@
             if (quantity > 5) {
                 postage = postageCosts[2].cost + (quantity - 5) * additionalPostagePerShirt;
             }
-            console.log("funkkarissa: " +postage);
+            //console.log("funkkarissa: " +postage);
             return postage;
         }
 
@@ -155,12 +157,12 @@
             // Iterate over each size in the order object
             for (const size in order) { 
                 totalQuantity += order[size];
-                console.log(size);
-                console.log(order[size]);
+                //console.log(size);
+                //console.log(order[size]);
                 // Check if the quantity for the current size is greater than 0
                 if (order[size] > 0) {
                     // Append the size and its quantity to the orderDetails string
-                    orderDetails += `${size}: ${order[size]} pcs<br/>`;
+                    orderDetails += `${size}: ${order[size]} kpl<br/>`;
                 }
             }
 
@@ -170,39 +172,39 @@
 
             // Construct the summary string
             const summary = `
-                Order Summary: <br/>
-                ${orderDetails ? 'T-Shirt Sizes:<br/>' + orderDetails : 'No T-Shirts Ordered<br/>'}
-                T-Shirts Price: ${totalTshirtPrice.toFixed(2)} euros <br/>
-                Postage: ${totalPostage.toFixed(2)} euros <br/>
-                Total Price: ${totalPrice.toFixed(2)} euros <br/>
+                <h3>Tilauksen yhteenveto</h3>
+                ${orderDetails ? 'T-paidat:<br/>' + orderDetails : 'Ei tilattuja T-paitoja<br/>'}
+                T-paitojen hinta: ${totalTshirtPrice.toFixed(2)} euroa <br/>
+                Postikulut: ${totalPostage.toFixed(2)} euroa <br/>
+                Kokonaishinta: ${totalPrice.toFixed(2)} euroa <br/>
             `;
 
             // Update the innerHTML of the element with the id 'orderSummary'
             document.getElementById('orderSummary').innerHTML = summary;
-            console.log(summary);          
+            //console.log(summary);          
         }
 
 
         document.getElementById('addToBasket').addEventListener('click', function() {
             const quantity = document.getElementById('quantity').value;
-            console.log(quantity);
+            //console.log(quantity);
             const size = document.getElementById('tshirtSize').value;
-            console.log(size);
+            //console.log(size);
             order[size] = order[size] + parseInt(quantity);
             //tää lasketaan myöhemmin:
             //totalQuantity = totalQuantity + quantity;
             //calculateTotalPrice();
-            console.log(order);
+            //console.log(order);
 
 
             if (quantity > 0) {
                 const basketItems = document.getElementById('basketItems');
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'basket-item';
-                itemDiv.textContent = `${size} - ${quantity} pcs`;
+                itemDiv.textContent = `${size} - ${quantity} kpl`;
 
                 const removeButton = document.createElement('button');
-                removeButton.textContent = 'Remove';
+                removeButton.textContent = 'Poista';
                 removeButton.size = size;
                 removeButton.quantity = quantity;
                 removeButton.addEventListener('click', function() {
@@ -210,7 +212,7 @@
                     //TÄHÄN TARVII PAITOJEN MÄÄRÄLLÄ VÄHENTÄÄ!
                     order[this.size] = order[this.size] - this.quantity;
                     updateOrderSummary();
-                    console.log(order);
+                    //console.log(order);
                 });
 
                 itemDiv.appendChild(removeButton);
@@ -238,7 +240,7 @@
                 totalPrice: totalPrice
             };
 
-            console.log(data);
+            //console.log(data);
             try {
                 const response = await fetch('/submit-order', {
                     method: 'POST',
@@ -258,7 +260,7 @@
                     alert('There was an error submitting your order. Please try again.');
                 }
             } catch (error) {
-                console.error('Error:', error);
+                //console.error('Error:', error);
                 alert('There was an error submitting your order. Please try again.');
             }
         });
