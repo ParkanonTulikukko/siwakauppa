@@ -43,7 +43,10 @@
             font-weight: bold;
             margin-top: 20px;
         }
-    </style>
+        .submit-order-button {
+            margin-bottom: 80px;
+        }
+    </style>    
 </head>
 <body>
     <h1>SIWAKAUPPA ON AUKI!</h1>
@@ -51,15 +54,15 @@
     <p>
         Siwa-paitojen ennakkomyynti on alkanut! 
 
-        Kauppa auki 22.8.2024 klo 10.00 asti, tai niin kauan kunnes tilaus (50 kpl) on täynnä. Paita on Cottoverin Reilun Kaupan / Fair Trade -mallia. 
-        
+        Kauppa auki 05.09.2024 klo 12.00 asti tai niin kauan kunnes ennakkotilaus (50 kpl) on täynnä. Paita on Cottoverin Reilun Kaupan / Fair Trade -mallia. 
+        Paidan hinta on 35 euroa / kpl.<br>
         Postikulut:
         1 kpl - 5.90 e,
         2 kpl - 6.90 e,
         3-5 kpl - 8.90 ja
         yli viiden kappaleen jälkeen jokainen lisäpaita + kaksi (2) euroa postikuluja. 
         
-        Paidat postitetaan 20.9.2024.
+        Paidat postitetaan viikolla 40.
         
         Ongelmia?: heikki.kuivala@parkanontulikukko.fi Paidat myy Tmi Maisteri Kuivala y-tunnus: 3405845-4   
     </p>
@@ -104,7 +107,7 @@
     
         <div class="order-summary" id="orderSummary"></div>
     
-        <button type="submit">Lähetä tilaus</button>
+        <button id="submitOrderButton" type="submit">Lähetä tilaus</button>
     </form>
 
     <script>
@@ -141,6 +144,8 @@
         //let totalQuantity = 0
         //let totalTshirtPrice = 0
         let totalPrice = 0
+        let totalTshirtPrice = 0;
+        let totalPostage = 0;
         //let totalPostage = totalTshirtPrice + totalPrice;
         const order = 
                 {'Small': 0,
@@ -173,8 +178,6 @@
         function updateOrderSummary() {
             let orderDetails = '';
             let totalQuantity = 0;
-            let totalTshirtPrice = 0;
-            let totalPostage = 0;
             totalPrice = 0;
 
             // Iterate over each size in the order object
@@ -260,6 +263,8 @@
                 additionalInfo: formData.get('additionalInfo'),
                 orderItems: order,
                 orderSummary: document.getElementById('orderSummary').textContent,
+                totalTshirtPrice: totalTshirtPrice,
+                totalPostage: totalPostage,
                 totalPrice: totalPrice
             };
 

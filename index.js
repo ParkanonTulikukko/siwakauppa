@@ -21,13 +21,13 @@ app.use(bodyParser.json()); // To handle JSON requests
 // Enable CORS
 app.use(cors());
 
-const kuukausi = '08';
+const kuukausi = '09';
 
 //console.log(path.resolve('public'));
 
 // Määrittele päivämäärät ja ajat
-const startDate = new Date('2024-' + kuukausi + '-29T12:45:00');
-const endDate = new Date('2024-' + kuukausi + '-30T18:00:00');
+const startDate = new Date('2024-' + kuukausi + '-03T10:00:00');
+const endDate = new Date('2024-' + kuukausi + '-05T12:00:00');
 
 // Määritellään päivämäärän ja ajan näyttö suomalaisessa muodossa
 const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
@@ -159,14 +159,16 @@ function sendConfirmationEmail(customerEmail, orderDetails) {
                     quantity > 0 ? `<li>${size}: ${quantity}</li>` : ''
                 ).join('')}
             </ul>
-            <li><strong>Kokonaishinta postikuluineen:</strong> ${orderDetails.totalPrice} EUR</li>
+            <li><strong>T-paitojen hinta:</strong> ${orderDetails.totalTshirtPrice} EUR</li>
+            <li><strong>Postikulut:</strong> ${orderDetails.totalPostage} EUR</li>
+            <li><strong>Kokonaishinta:</strong> ${orderDetails.totalPrice} EUR</li>
             <li><strong>Lisätiedot:</strong> ${orderDetails.additionalInfo}</li>
         </ul>
         <p><strong>MAKSUOHJEET</strong></p>
         <p><strong>Tilisiirrolla</strong> tilinumeroon FI77 1685 2932 9583 13 / Heikki Kuivala<br/>
         Viestiksi siwapaitatilaus.</p>
         <p><strong>Tai</strong></p>
-        <p><strong>MobilePaylla</strong>: Heikki Kuivala / 040-7702181<br/>
+        <p><strong>MobilePaylla</strong>: 040-7702181 / Heikki Juhani Kuivala<br/>
         Viestiksi siwapaitatilaus.</p>
         <p>Kun olet maksanut, niin laitathan tähän <strong>sähköpostiin kuvankaappauksen maksusta</strong> tai maksun ajankohdan, niin olet mukana ennakkotilauksessa!</p>
         <p>Terveisin,<br/>
