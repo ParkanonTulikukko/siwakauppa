@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const nodemailer = require('nodemailer');
 const cors = require('cors');
 const path = require('path');
-const generateOrderTextFile = require('./generateTextFile');
+//const generateOrderTextFile = require('./generateTextFile');
 const res = require('express/lib/response');
 
 const app = express();
@@ -26,8 +26,8 @@ const kuukausi = '08';
 //console.log(path.resolve('public'));
 
 // Määrittele päivämäärät ja ajat
-const startDate = new Date('2024-' + kuukausi + '-10T10:00:00');
-const endDate = new Date('2024-' + kuukausi + '-20T18:00:00');
+const startDate = new Date('2024-' + kuukausi + '-29T12:45:00');
+const endDate = new Date('2024-' + kuukausi + '-30T18:00:00');
 
 // Määritellään päivämäärän ja ajan näyttö suomalaisessa muodossa
 const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
@@ -35,8 +35,7 @@ const formattedStartDate = new Intl.DateTimeFormat('fi-FI', options).format(star
 
 // Middleware tarkistaa päivämäärän ja ajan ja vastaa oikealla sivulla
 // Middleware to handle requests
-// Middleware to handle both "/" and "/siwakauppa" requests
-app.get(['/', '/siwakauppa'], (req, res) => {
+app.get(['/'], (req, res) => {
     const currentDate = new Date();
 
     // Date checks
@@ -51,7 +50,7 @@ app.get(['/', '/siwakauppa'], (req, res) => {
             </head>
             <body>
                 <h1>"Tekis mieli ryöstää Siwa" -t-paitojen ennakkomyynti alkaa pian!</h1>
-                <p>Ennakkomyynti alkaa ${formattedStartDate}. Pysy kuulolla!</p>
+                <p>Ennakkomyynti alkaa ${formattedStartDate}. Pysy linjoilla!</p>
             </body>
             </html>
         `);
@@ -80,64 +79,10 @@ app.get(['/', '/siwakauppa'], (req, res) => {
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-/*
-app.get('/', (req, res) => {
-    console.log("index");
-    res.redirect('/siwakauppa');
+app.get('/api/mode', (req, res) => {
+    res.json({ mode: process.env.NODE_ENV });
 });
-*/
 
-// Serve static files (e.g., the HTML form)
-//app.use(express.static(path.join(__dirname, 'public')));
-//app.use(express.static(path.resolve('public')));
-//app.use(express.static(path.join(process.cwd(), 'public')));
-/*
-app.get('/siwakauppa', (req, res) => {
-    const currentDate = new Date();
-    console.log("currentDate");
-    console.log(currentDate);
-    console.log("startDate");
-    console.log(startDate);
-    console.log(currentDate < startDate);
-    if (currentDate < startDate) {
-        // HTML-vastaus ennen ennakkomyyntikautta
-        return res.send(`
-            <!DOCTYPE html>
-            <html lang="fi">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Ennakkomyynti alkamassa</title>
-            </head>
-            <body>
-                <h1>"Tekis mieli ryöstää Siwa" -t-paitojen ennakkomyynti alkaa pian!</h1>
-                <p>Ennakkomyynti alkaa ${formattedStartDate}. Pysy kuulolla!</p>
-            </body>
-            </html>
-        `);
-    } 
-    else if (currentDate > endDate) {
-        // HTML-vastaus ennakkomyyntikauden jälkeen
-        return res.send(`
-            <!DOCTYPE html>
-            <html lang="fi">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Ennakkomyynti päättynyt</title>
-            </head>
-            <body>
-                <h1>Ennakkomyynti päättynyt</h1>
-                <p>"Tekis mieli ryöstää Siwa" -t-paitojen ennakkotilaus on täynnä tai päättynyt. </p>
-            </body>
-            </html>
-        `);
-    } 
-    else if (currentDate > startDate && currentDate < endDate) {
-        res.sendFile(path.join(__dirname, 'public', 'index.html'));
-    }   
-})
-    */
 
 // Configure Nodemailer with custom SMTP settings
 const transporter = nodemailer.createTransport({
@@ -192,12 +137,60 @@ app.get('/thank-you', (req, res) => {
     `);
 });
 
+// Function to send confirmation email to the customer
+function sendConfirmationEmail(customerEmail, orderDetails) {
+    const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: customerEmail,
+        subject: 'SIWAPAIDAN TILAUSVAHVISTUS',
+        html: `
+        <p>Moro,</p>
+        <p>Siwapaitatilauksesi tuli perille!</p>
+        <p>Tässä yhteenveto:</p>
+        <ul>
+            <li><strong>Nimi:</strong> ${orderDetails.fullname}</li>
+            <li><strong>Osoite:</strong> ${orderDetails.streetAddress}</li>
+            <li><strong>Kaupunki ja postinumero:</strong> ${orderDetails.city} ${orderDetails.postalCode}</li>
+            <li><strong>Sähköposti:</strong> ${orderDetails.email}</li>
+            <li><strong>Puhelinnumero:</strong> ${orderDetails.phoneNumber}</li>
+            <li><strong>Tilaus:</strong></li>
+            <ul>
+                ${Object.entries(orderDetails.orderItems).map(([size, quantity]) => 
+                    quantity > 0 ? `<li>${size}: ${quantity}</li>` : ''
+                ).join('')}
+            </ul>
+            <li><strong>Kokonaishinta postikuluineen:</strong> ${orderDetails.totalPrice} EUR</li>
+            <li><strong>Lisätiedot:</strong> ${orderDetails.additionalInfo}</li>
+        </ul>
+        <p><strong>MAKSUOHJEET</strong></p>
+        <p><strong>Tilisiirrolla</strong> tilinumeroon FI77 1685 2932 9583 13 / Heikki Kuivala<br/>
+        Viestiksi siwapaitatilaus.</p>
+        <p><strong>Tai</strong></p>
+        <p><strong>MobilePaylla</strong>: Heikki Kuivala / 040-7702181<br/>
+        Viestiksi siwapaitatilaus.</p>
+        <p>Kun olet maksanut, niin laitathan tähän <strong>sähköpostiin kuvankaappauksen maksusta</strong> tai maksun ajankohdan, niin olet mukana ennakkotilauksessa!</p>
+        <p>Terveisin,<br/>
+        Heikki Kuivala<br/>
+        heikki.kuivala@parkanontulikukko.fi<br/>
+        Tmi Maisteri Kuivala<br/>
+        y-tunnus: 3405845-4</p>
+        `
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+            console.error('Error sending confirmation email:', error);
+        } else {
+            console.log('Confirmation email sent:', info.response);
+        }
+    });
+}
 
 // Handle form submission
 app.post('/submit-order', async (req, res) => {
     const orderData = req.body;
 
-    generateOrderTextFile(orderData);
+    //generateOrderTextFile(orderData);
 
     // Email content
     const mailOptions = {
@@ -208,7 +201,7 @@ app.post('/submit-order', async (req, res) => {
         <p>You have a new T-Shirt order:</p><br/>
         <strong>Full Name:</strong> ${orderData.fullname} <br/>  
         <strong>Street Address:</strong> ${orderData.streetAddress} <br/>
-        <strong>City & Postal Code:</strong> ${orderData.city}, ${orderData.postalCode} <br/>
+        <strong>City & Postal Code:</strong> ${orderData.city} ${orderData.postalCode} <br/>
         <strong>Email:</strong> ${orderData.email} <br/>     
         <strong>Phone Number:</strong> ${orderData.phoneNumber} <br/> 
         <strong>Basket Items:</strong>  
@@ -230,6 +223,10 @@ app.post('/submit-order', async (req, res) => {
             res.status(500).send('Internal Server Error');
         } else {
             console.log('Email sent:', info.response);
+
+            // Send confirmation email to customer
+            sendConfirmationEmail(orderData.email, orderData);
+
             res.send('Order received. Thank you!');
         }
     });
@@ -237,4 +234,5 @@ app.post('/submit-order', async (req, res) => {
 
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
+    console.log(`App running in ${process.env.NODE_ENV} mode`);
 });

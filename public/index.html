@@ -108,6 +108,29 @@
     </form>
 
     <script>
+        fetch('/api/mode')
+        .then(response => response.json())
+        .then(data => {
+            const mode = data.mode;
+            //console.log("mode: " + mode);
+            if (mode === 'development') {
+                document.getElementById('fullname').value = 'John Doe';
+                document.getElementById('streetAddress').value = '123 Main St';
+                document.getElementById('city').value = 'Anytown';
+                document.getElementById('postalCode').value = '12345';
+                document.getElementById('email').value = 'john.doe@example.com';
+                document.getElementById('phoneNumber').value = '123-456-7890';
+                document.getElementById('quantity').value = '1';
+            } else if (mode === 'production') {
+                document.getElementById('fullname').value = '';
+                document.getElementById('streetAddress').value = '';
+                document.getElementById('city').value = '';
+                document.getElementById('postalCode').value = '';
+                document.getElementById('email').value = '';
+                document.getElementById('phoneNumber').value = '';
+                document.getElementById('quantity').value = '';
+            }
+        });    
         const tshirtPrice = 35;
         const postageCosts = [
             { maxQuantity: 1, cost: 5.90 },
