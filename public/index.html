@@ -155,6 +155,14 @@
                 'XX-Large': 0,
                 'XXX-Large': 0};
 
+        // Construct the summary string
+        let summary = `
+    <h2 style="color: red;">
+        Lisää valitut paidat koriin.
+    </h2>
+`;
+        document.getElementById('orderSummary').innerHTML = summary;
+
         //console.log(order);
 
         function calculatePostage(quantity) {
@@ -197,7 +205,7 @@
             totalPrice = totalTshirtPrice + totalPostage;
 
             // Construct the summary string
-            const summary = `
+            summary = `
                 <h3>Tilauksen yhteenveto</h3>
                 ${orderDetails ? 'T-paidat:<br/>' + orderDetails : 'Ei tilattuja T-paitoja<br/>'}
                 T-paitojen hinta: ${totalTshirtPrice.toFixed(2)} euroa <br/>
@@ -250,6 +258,14 @@
 
         document.getElementById('orderForm').addEventListener('submit', async function(event) {
             event.preventDefault();
+
+            // Check if the order is empty
+            const isEmptyOrder = Object.values(order).every(quantity => quantity === 0);
+
+            if (isEmptyOrder) {
+                alert('Ostoskori on tyhjä. Lisää paidat koriin "Lisää koriin" -painikkeesta.');
+                return; // Stop form submission
+                }            
 
             const formData = new FormData(this);
             //const basketItems = Array.from(document.getElementById('basketItems').children).map(item => item.textContent.replace('Remove', '').trim());

@@ -67,7 +67,9 @@ app.get(['/'], (req, res) => {
             </head>
             <body>
                 <h1>Ennakkomyynti päättynyt</h1>
-                <p>"Tekis mieli ryöstää Siwa" -t-paitojen ennakkotilaus on täynnä tai päättynyt. </p>
+                <p>"Tekis mieli ryöstää Siwa" -t-paitojen ennakkotilaus on täynnä tai päättynyt.</p> 
+                <p>Seuraavasta ennakkomyynnistä ilmoitetaan ensimmäisenä
+                Nyrkkiksen <a href="http://bit.ly/nyrkkis">sähköpostilistalla</a> ja myös sometileillä Instassa ja Facebookissa.  </p>
             </body>
             </html>
         `);
